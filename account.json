@@ -1,8 +1,8 @@
 {
     "driver": "chrome",
     "url": "https://ts.fss.com.vn/core/kimai.php",
-    "username": "duc.leanh",
-    "password": "Anhduc$$@0210",
+    "username": "username",
+    "password": "password",
     "time_sleep_duration": 3,
     "start_day": "09.10.2026",
     "end_day": "13.10.2026",
