@@ -70,6 +70,13 @@ def fill_entry(driver, time_sleep_duration, date_value, start_time, end_time):
     add_button.click()
     time.sleep(time_sleep_duration)
 
+    # xpath //*[@id="add_edit_timeSheetEntry_projectID"]/option[1]
+    project_option = driver.find_element(
+        "xpath", '//*[@id="add_edit_timeSheetEntry_projectID"]/option[1]'
+    )
+    project_option.click()
+    time.sleep(time_sleep_duration)
+
     activity_option = driver.find_element(
         "xpath", '//*[@id="add_edit_timeSheetEntry_activityID"]/option[10]'
     )
