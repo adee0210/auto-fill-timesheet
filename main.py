@@ -6,8 +6,6 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from selenium.webdriver.common.by import By
-
 
 def ensure_venv():
     project_dir = Path(__file__).resolve().parent
@@ -29,8 +27,8 @@ def ensure_venv():
 
 
 ensure_venv()
-
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 
