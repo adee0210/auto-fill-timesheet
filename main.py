@@ -6,6 +6,8 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from selenium.webdriver.common.by import By
+
 
 def ensure_venv():
     project_dir = Path(__file__).resolve().parent
@@ -32,8 +34,11 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 
-def create_driver(url):
-    driver = webdriver.Chrome()
+def create_driver(url, type_driver):
+    if type_driver == "chrome":
+        driver = webdriver.Chrome()
+    elif type_driver == "edge":
+        driver = webdriver.Edge()
     driver.get(url)
     return driver
 
@@ -89,7 +94,8 @@ def fill_entry(driver, time_sleep_duration, date_value, start_time, end_time):
     send_keys_to_field(driver, '//*[@id="end_time"]', end_time)
     time.sleep(time_sleep_duration)
 
-    ok_button = driver.find_element("xpath", '//*[@id="formbuttons"]/input[2]')
+    ok_button = driver.find_element(By.CSS_SELECTOR, "#formbuttons > input.btn_ok")
+
     ok_button.click()
     time.sleep(time_sleep_duration)
 
@@ -105,9 +111,10 @@ def login_and_fill_form(
     end_time_morning,
     start_time_afternoon,
     end_time_afternoon,
+    driver,
 ):
     # fill login start day to end day and start time to end time
-    driver = create_driver(url)
+    driver = create_driver(url, driver)
     time.sleep(time_sleep_duration)  # Wait for the page to load
     # xpath //*[@id="kimaiusername"]
     username_field = driver.find_element("xpath", '//*[@id="kimaiusername"]')
@@ -163,6 +170,7 @@ with open("account.json", "r") as f:
     config = json.load(f)
 
 login_and_fill_form(
+    driver=config["driver"],
     url=config["url"],
     username=config["username"],
     password=config["password"],
