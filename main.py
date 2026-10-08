@@ -28,10 +28,7 @@ def ensure_venv():
 
 ensure_venv()
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 
 def create_driver(url, type_driver):
@@ -91,20 +88,27 @@ def fill_entry(driver, time_sleep_duration, date_value, start_time, end_time):
     send_keys_to_field(driver, '//*[@id="start_day"]', date_value)
     send_keys_to_field(driver, '//*[@id="end_day"]', date_value)
     send_keys_to_field(driver, '//*[@id="start_time"]', start_time)
-    send_keys_to_field(driver, '//*[@id="end_time"]', end_time)
     time.sleep(time_sleep_duration)
-
-    ok_button = WebDriverWait(
-        driver, max(time_sleep_duration, 10)
-    ).until(
-        EC.element_to_be_clickable(
-            (
-                By.CSS_SELECTOR,
-                "#formbuttons input.btn_ok[type='submit'][value='OK']",
-            )
-        )
+    end_time_field = driver.find_element("xpath", '//*[@id="end_time"]')
+    end_time_field.click()
+    end_time_field.send_keys(Keys.CONTROL + "a")
+    end_time_field.send_keys(end_time)
+    driver.execute_script(
+        """
+        const field = arguments[0];
+        const form = field.form || field.closest("form");
+        if (!form) {
+            throw new Error("Cannot submit: #end_time is not inside a form.");
+        }
+        if (typeof form.requestSubmit === "function") {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+        """,
+        end_time_field,
     )
-    ok_button.click()
+
     time.sleep(time_sleep_duration)
 
 
