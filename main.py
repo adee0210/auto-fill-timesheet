@@ -30,6 +30,8 @@ ensure_venv()
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 def create_driver(url, type_driver):
@@ -92,8 +94,16 @@ def fill_entry(driver, time_sleep_duration, date_value, start_time, end_time):
     send_keys_to_field(driver, '//*[@id="end_time"]', end_time)
     time.sleep(time_sleep_duration)
 
-    ok_button = driver.find_element(By.CSS_SELECTOR, "#formbuttons > input.btn_ok")
-
+    ok_button = WebDriverWait(
+        driver, max(time_sleep_duration, 10)
+    ).until(
+        EC.element_to_be_clickable(
+            (
+                By.CSS_SELECTOR,
+                "#formbuttons input.btn_ok[type='submit'][value='OK']",
+            )
+        )
+    )
     ok_button.click()
     time.sleep(time_sleep_duration)
 
