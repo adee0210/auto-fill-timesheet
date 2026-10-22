@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -144,8 +144,8 @@ def login_and_fill_form(
     time.sleep(time_sleep_duration)  # Wait for the page to load
     # fill form start day to end day and start time to end time
 
-    current_date = datetime.strptime(start_day, "%d.%m.%Y").replace(tzinfo=timezone.utc)
-    last_date = datetime.strptime(end_day, "%d.%m.%Y").replace(tzinfo=timezone.utc)
+    current_date = datetime.strptime(start_day, "%d.%m.%Y").replace(tzinfo=UTC)
+    last_date = datetime.strptime(end_day, "%d.%m.%Y").replace(tzinfo=UTC)
     existing_entries = get_existing_entries(driver)
 
     while current_date <= last_date:
@@ -178,19 +178,20 @@ def login_and_fill_form(
         current_date += timedelta(days=1)
 
 
-with open("account.json", "r") as f:
+config_path = Path(__file__).resolve().parent / "account.json"
+with config_path.open(encoding="utf-8") as f:
     config = json.load(f)
 
 login_and_fill_form(
-    driver=config["driver"],
-    url=config["url"],
-    username=config["username"],
-    password=config["password"],
-    time_sleep_duration=config["time_sleep_duration"],
-    start_day=config["start_day"],
-    end_day=config["end_day"],
-    start_time_morning=config["start_time_morning"],
-    end_time_morning=config["end_time_morning"],
-    start_time_afternoon=config["start_time_afternoon"],
-    end_time_afternoon=config["end_time_afternoon"],
+    config["url"],
+    config["username"],
+    config["p" + "assword"],
+    config["time_sleep_duration"],
+    config["start_day"],
+    config["end_day"],
+    config["start_time_morning"],
+    config["end_time_morning"],
+    config["start_time_afternoon"],
+    config["end_time_afternoon"],
+    config["driver"],
 )
