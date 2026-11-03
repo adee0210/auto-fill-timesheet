@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -29,13 +29,19 @@ def ensure_venv():
 ensure_venv()
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 
 def create_driver(url, type_driver):
+    type_driver = str(type_driver).strip().lower()
     if type_driver == "chrome":
         driver = webdriver.Chrome()
     elif type_driver == "edge":
         driver = webdriver.Edge()
+    else:
+        raise ValueError(
+            f'Unsupported driver "{type_driver}" in account.json. Use "chrome" or "edge".'
+        )
     driver.get(url)
     return driver
 
@@ -49,6 +55,33 @@ def send_keys_to_field(driver, field_xpath, value):
 
 def normalize_time(value):
     return value.strip()[:5]
+
+
+def select_option(driver, select_id, wanted, default_index, label):
+    """Select an option by visible text or value; fall back to index (old behavior)."""
+    select = Select(driver.find_element("id", select_id))
+    options = select.options
+    if wanted:
+        wanted_norm = " ".join(str(wanted).split()).lower()
+        for option in options:
+            text = " ".join(option.text.split()).lower()
+            value = (option.get_attribute("value") or "").strip().lower()
+            if wanted_norm in (text, value):
+                option.click()
+                return
+    elif default_index < len(options):
+        options[default_index].click()
+        return
+
+    available = "\n".join(
+        f'  - "{o.text.strip()}" (value={o.get_attribute("value")})' for o in options
+    )
+    target = repr(wanted) if wanted else f"option #{default_index + 1}"
+    raise RuntimeError(
+        f"Cannot find {label} {target}. "
+        f"Available options:\n{available}\n"
+        f'Set "{label}_name" in account.json to one of the names above.'
+    )
 
 
 def get_existing_entries(driver):
@@ -67,22 +100,27 @@ def get_existing_entries(driver):
     return entries
 
 
-def fill_entry(driver, time_sleep_duration, date_value, start_time, end_time):
+def fill_entry(
+    driver,
+    time_sleep_duration,
+    date_value,
+    start_time,
+    end_time,
+    project_name=None,
+    activity_name=None,
+):
     add_button = driver.find_element("xpath", '//*[@id="timeSheet_head"]/div/a')
     add_button.click()
     time.sleep(time_sleep_duration)
 
-    # xpath //*[@id="add_edit_timeSheetEntry_projectID"]/option[1]
-    project_option = driver.find_element(
-        "xpath", '//*[@id="add_edit_timeSheetEntry_projectID"]/option[1]'
+    select_option(
+        driver, "add_edit_timeSheetEntry_projectID", project_name, 0, "project"
     )
-    project_option.click()
     time.sleep(time_sleep_duration)
 
-    activity_option = driver.find_element(
-        "xpath", '//*[@id="add_edit_timeSheetEntry_activityID"]/option[10]'
+    select_option(
+        driver, "add_edit_timeSheetEntry_activityID", activity_name, 9, "activity"
     )
-    activity_option.click()
     time.sleep(time_sleep_duration)
 
     send_keys_to_field(driver, '//*[@id="start_day"]', date_value)
@@ -124,6 +162,8 @@ def login_and_fill_form(
     start_time_afternoon,
     end_time_afternoon,
     driver,
+    project_name=None,
+    activity_name=None,
 ):
     # fill login start day to end day and start time to end time
     driver = create_driver(url, driver)
@@ -144,8 +184,8 @@ def login_and_fill_form(
     time.sleep(time_sleep_duration)  # Wait for the page to load
     # fill form start day to end day and start time to end time
 
-    current_date = datetime.strptime(start_day, "%d.%m.%Y").replace(tzinfo=timezone.utc)
-    last_date = datetime.strptime(end_day, "%d.%m.%Y").replace(tzinfo=timezone.utc)
+    current_date = datetime.strptime(start_day, "%d.%m.%Y").replace(tzinfo=UTC)
+    last_date = datetime.strptime(end_day, "%d.%m.%Y").replace(tzinfo=UTC)
     existing_entries = get_existing_entries(driver)
 
     while current_date <= last_date:
@@ -172,13 +212,16 @@ def login_and_fill_form(
                 date_value,
                 start_time,
                 end_time,
+                project_name,
+                activity_name,
             )
             existing_entries.add(entry)
 
         current_date += timedelta(days=1)
 
 
-with open("account.json", "r") as f:
+config_path = Path(__file__).resolve().parent / "account.json"
+with open(config_path, "r", encoding="utf-8") as f:
     config = json.load(f)
 
 login_and_fill_form(
@@ -193,4 +236,6 @@ login_and_fill_form(
     end_time_morning=config["end_time_morning"],
     start_time_afternoon=config["start_time_afternoon"],
     end_time_afternoon=config["end_time_afternoon"],
+    project_name=config.get("project_name"),
+    activity_name=config.get("activity_name"),
 )
