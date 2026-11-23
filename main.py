@@ -145,20 +145,59 @@ def parse_holidays(holidays):
     return parsed
 
 
-def get_existing_entries(driver):
-    rows = driver.find_elements("xpath", "//tr[starts-with(@id, 'timeSheetEntry')]")
-    entries = set()
-    for row in rows:
+def to_minutes(value):
+    """'08:30' / '8:30:00' -> số phút trong ngày; None nếu không đọc được."""
+    try:
+        hour, minute = value.strip().split(":")[:2]
+        return int(hour) * 60 + int(minute)
+    except (ValueError, AttributeError):
+        return None
+
+
+def read_day_entries(driver, date_value):
+    """Các entry đang hiển thị của một ngày: [{'id', 'start', 'end'}] (start/end = phút)."""
+    entries = []
+    for row in driver.find_elements("xpath", ENTRY_ROWS):
         cells = row.find_elements("xpath", "./td")
-        if len(cells) >= 4:
-            entries.add(
-                (
-                    normalize_text(cells[1].text),
-                    normalize_time(cells[2].text),
-                    normalize_time(cells[3].text),
-                )
+        if len(cells) >= 4 and normalize_text(cells[1].text) == date_value:
+            entries.append(
+                {
+                    "id": row.get_attribute("id"),
+                    "start": to_minutes(cells[2].text),
+                    "end": to_minutes(cells[3].text),
+                }
             )
     return entries
+
+
+def plan_day(entries, slots):
+    """So sánh entry hiện có với các khung giờ cần điền của một ngày.
+
+    - Entry khớp đúng một khung giờ: giữ lại (mỗi khung chỉ giữ 1 entry).
+    - Entry trùng lặp hoặc chồng giờ với khung cần điền: xóa.
+    - Entry không đụng khung giờ nào (ví dụ OT buổi tối): để nguyên.
+    Trả về (danh sách entry cần xóa, danh sách khung giờ còn thiếu cần thêm).
+    """
+    kept = set()
+    to_delete = []
+    for entry in entries:
+        start, end = entry["start"], entry["end"]
+        if start is None or end is None:
+            continue
+        exact = next(
+            (i for i, (s, e) in enumerate(slots) if (s, e) == (start, end) and i not in kept),
+            None,
+        )
+        if exact is not None:
+            kept.add(exact)
+        elif any(start < e and s < end for s, e in slots):
+            to_delete.append(entry)
+    missing = [i for i in range(len(slots)) if i not in kept]
+    return to_delete, missing
+
+
+def format_minutes(value):
+    return f"{value // 60:02d}:{value % 60:02d}"
 
 
 def open_add_dialog(driver, timeout):
@@ -261,8 +300,15 @@ def fill_timesheet(config):
     current_date = datetime.strptime(config["start_day"], "%d.%m.%Y").replace(tzinfo=UTC)
     last_date = datetime.strptime(config["end_day"], "%d.%m.%Y").replace(tzinfo=UTC)
 
+    slot_times = [
+        (config["start_time_morning"], config["end_time_morning"]),
+        (config["start_time_afternoon"], config["end_time_afternoon"]),
+    ]
+    slots = [(to_minutes(start), to_minutes(end)) for start, end in slot_times]
+    if any(start is None or end is None or start >= end for start, end in slots):
+        raise ValueError("Giờ bắt đầu/kết thúc không hợp lệ (định dạng HH:MM:SS).")
+
     driver = login(config)
-    existing_entries = get_existing_entries(driver)
 
     while current_date <= last_date:
         # Only fill for weekdays (Monday to Friday)
@@ -275,14 +321,18 @@ def fill_timesheet(config):
             current_date += timedelta(days=1)
             continue
         date_value = current_date.strftime("%d.%m.%Y")
-        for start_time, end_time in (
-            (config["start_time_morning"], config["end_time_morning"]),
-            (config["start_time_afternoon"], config["end_time_afternoon"]),
-        ):
-            entry = (date_value, normalize_time(start_time), normalize_time(end_time))
-            if entry in existing_entries:
-                continue
 
+        # Kiểm tra trước: xóa entry trùng lặp / chồng giờ, giữ entry đã đúng
+        to_delete, missing = plan_day(read_day_entries(driver, date_value), slots)
+        for entry in to_delete:
+            print(
+                f"Xóa entry trùng/chồng giờ {date_value} "
+                f"{format_minutes(entry['start'])}-{format_minutes(entry['end'])}"
+            )
+            erase_entry(driver, timeout, driver.find_element("id", entry["id"]))
+
+        for index in missing:
+            start_time, end_time = slot_times[index]
             fill_entry(
                 driver,
                 timeout,
@@ -292,7 +342,8 @@ def fill_timesheet(config):
                 project,
                 activity,
             )
-            existing_entries.add(entry)
+        if not to_delete and not missing:
+            print(f"Ngày {date_value} đã đủ, bỏ qua")
 
         current_date += timedelta(days=1)
 

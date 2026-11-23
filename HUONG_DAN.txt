@@ -14,6 +14,9 @@ AUTO FILL TIMESHEET - HUONG DAN SU DUNG
    hoac khoang DD.MM.YYYY-DD.MM.YYYY), bam "Xoa toan bo entry cua cac ngay nay",
    xac nhan. App se tich "Erase Entry" va bam OK cho tung entry.
 
+Luu y: truoc khi dien, app tu xoa cac entry trung lap / chong gio voi khung
+sang, chieu cua ngay do roi moi them. Entry dung gio san co duoc giu lai.
+
 Yeu cau: may da cai Google Chrome hoac Microsoft Edge, co ket noi mang.
 Lan chay dau tien co the cham hon vi Selenium tu tai driver cho trinh duyet.
 

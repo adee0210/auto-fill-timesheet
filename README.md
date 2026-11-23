@@ -5,6 +5,12 @@ trong những ngày làm việc từ thứ Hai đến thứ Sáu, bỏ qua các 
 khai báo trong mảng `holidays`. Chương trình bỏ qua các
 entry đã tồn tại để tránh tạo trùng.
 
+Trước khi điền mỗi ngày, chương trình kiểm tra các entry đã có của ngày đó:
+entry khớp đúng khung giờ thì giữ (mỗi khung giữ 1 entry); entry trùng lặp
+hoặc chồng giờ với khung sáng/chiều thì xóa (tích **Erase Entry**); sau đó
+mới thêm các khung còn thiếu. Entry không đụng khung giờ nào (ví dụ OT buổi
+tối) được giữ nguyên.
+
 ## Yêu cầu
 
 - Python 3.11 trở lên
