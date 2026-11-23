@@ -10,6 +10,10 @@ AUTO FILL TIMESHEET - HUONG DAN SU DUNG
    sau do chon Project va Activity can dien.
 5. Bam "Luu & chay". App se mo trinh duyet Chrome/Edge va tu dong dien.
 
+6. Xoa entry: nhap ngay vao o "Ngay can xoa" (moi dong 1 ngay DD.MM.YYYY
+   hoac khoang DD.MM.YYYY-DD.MM.YYYY), bam "Xoa toan bo entry cua cac ngay nay",
+   xac nhan. App se tich "Erase Entry" va bam OK cho tung entry.
+
 Yeu cau: may da cai Google Chrome hoac Microsoft Edge, co ket noi mang.
 Lan chay dau tien co the cham hon vi Selenium tu tai driver cho trinh duyet.
 

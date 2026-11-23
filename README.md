@@ -72,6 +72,16 @@ Cửa sổ cấu hình cho phép sửa toàn bộ `account.json`, nhập ngày n
 
 Có thể lấy danh sách bằng dòng lệnh: `python main.py --fetch-options`.
 
+### Xóa entry theo ngày
+
+Nhập các ngày vào ô **Ngày cần xóa** (mỗi dòng một ngày `DD.MM.YYYY` hoặc
+một khoảng `DD.MM.YYYY-DD.MM.YYYY`) rồi bấm **Xóa toàn bộ entry của các ngày
+này**. Với mỗi entry của ngày đó, chương trình mở hộp thoại sửa, tích
+**Erase Entry** và bấm OK. Chỉ xóa được các entry đang hiển thị trong danh
+sách trên trang.
+
+Dòng lệnh: `python main.py --delete 20.11.2026 23.11.2026-25.11.2026`.
+
 ## Cấu hình
 
 | Trường | Mô tả |
@@ -80,7 +90,7 @@ Có thể lấy danh sách bằng dòng lệnh: `python main.py --fetch-options`
 | `url` | Địa chỉ hệ thống timesheet |
 | `username` | Tên đăng nhập cá nhân |
 | `password` | Mật khẩu cá nhân |
-| `time_sleep_duration` | Số giây chờ giữa các thao tác |
+| `time_sleep_duration` | Thời gian chờ **tối đa** cho mỗi bước (giây, tối thiểu 10). Trang tải xong sớm thì chương trình làm tiếp ngay |
 | `start_day`, `end_day` | Khoảng ngày, định dạng `DD.MM.YYYY` |
 | `start_time_morning`, `end_time_morning` | Giờ bắt đầu/kết thúc buổi sáng |
 | `start_time_afternoon`, `end_time_afternoon` | Giờ bắt đầu/kết thúc buổi chiều |

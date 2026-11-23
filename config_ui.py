@@ -9,7 +9,7 @@ import subprocess
 import sys
 import threading
 import tkinter as tk
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from tkinter import messagebox, ttk
 
@@ -31,7 +31,7 @@ TEXT_FIELDS = [
     ("url", "URL hệ thống"),
     ("username", "Tên đăng nhập"),
     ("password", "Mật khẩu"),
-    ("time_sleep_duration", "Thời gian chờ (giây)"),
+    ("time_sleep_duration", "Chờ tối đa mỗi bước (giây)"),
     ("start_day", "Từ ngày (DD.MM.YYYY)"),
     ("end_day", "Đến ngày (DD.MM.YYYY)"),
     ("start_time_morning", "Sáng bắt đầu"),
@@ -45,6 +45,25 @@ DATE_FORMAT = "%d.%m.%Y"
 def read_json(path):
     with path.open(encoding="utf-8-sig") as f:
         return json.load(f)
+
+
+def expand_days(text):
+    """Đọc ngày/khoảng ngày từ ô nhập. Trả về None (và báo lỗi) nếu có ngày sai."""
+    days = []
+    for part in text.replace(",", " ").split():
+        start, _, end = part.partition("-")
+        try:
+            first = datetime.strptime(start, DATE_FORMAT)
+            last = datetime.strptime(end or start, DATE_FORMAT)
+        except ValueError:
+            messagebox.showerror(
+                "Lỗi ngày", f"Ngày không hợp lệ: {part!r}\n(DD.MM.YYYY hoặc DD.MM.YYYY-DD.MM.YYYY)"
+            )
+            return None
+        while first <= last:
+            days.append(first.strftime(DATE_FORMAT))
+            first += timedelta(days=1)
+    return list(dict.fromkeys(days))
 
 
 class ConfigApp(tk.Tk):
@@ -132,6 +151,21 @@ class ConfigApp(tk.Tk):
         )
         row += 1
 
+        ttk.Separator(frame).grid(row=row, column=0, columnspan=2, sticky="ew", pady=8)
+        row += 1
+
+        ttk.Label(
+            frame, text="Ngày cần xóa\n(mỗi dòng 1 ngày\nhoặc khoảng\nDD.MM.YYYY-DD.MM.YYYY)"
+        ).grid(row=row, column=0, sticky="nw", pady=2)
+        self.delete_text = tk.Text(frame, width=32, height=4)
+        self.delete_text.grid(row=row, column=1, sticky="w", pady=2)
+        row += 1
+
+        ttk.Button(
+            frame, text="Xóa toàn bộ entry của các ngày này", command=self._delete
+        ).grid(row=row, column=1, sticky="e", pady=4)
+        row += 1
+
         self.log = tk.Text(frame, width=60, height=8, state="disabled")
         self.log.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(6, 0))
 
@@ -197,6 +231,24 @@ class ConfigApp(tk.Tk):
     def _save_and_run(self):
         if self._save():
             self._run_main([], "Đang điền timesheet...")
+
+    def _delete(self):
+        days = expand_days(self.delete_text.get("1.0", "end"))
+        if days is None:
+            return
+        if not days:
+            messagebox.showinfo("Xóa entry", "Hãy nhập ít nhất một ngày cần xóa.")
+            return
+        preview = ", ".join(days[:10]) + (" ..." if len(days) > 10 else "")
+        if not messagebox.askyesno(
+            "Xác nhận xóa",
+            f"Xóa TOÀN BỘ entry của {len(days)} ngày sau?\n\n{preview}\n\n"
+            "Thao tác này không hoàn tác được.",
+            icon="warning",
+        ):
+            return
+        if self._save():
+            self._run_main(["--delete", *days], f"Đang xóa entry của {len(days)} ngày...")
 
     def _fetch_options(self):
         if self._save():
