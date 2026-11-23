@@ -1,2 +1,8 @@
 .venv
 account.json
+options.json
+__pycache__/
+build/
+dist/
+release/
+*.spec

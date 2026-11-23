@@ -9,5 +9,8 @@
     "start_time_morning": "08:30:00",
     "end_time_morning": "12:00:00",
     "start_time_afternoon": "13:00:00",
-    "end_time_afternoon": "17:30:00"
+    "end_time_afternoon": "17:30:00",
+    "project": "",
+    "activity": "",
+    "holidays": ["01.01.2026", "02.09.2026"]
 }

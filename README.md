@@ -1,7 +1,8 @@
 # Auto Fill Timesheet
 
 Tự động đăng nhập vào hệ thống timesheet và điền các khung giờ làm việc
-trong những ngày làm việc từ thứ Hai đến thứ Sáu. Chương trình bỏ qua các
+trong những ngày làm việc từ thứ Hai đến thứ Sáu, bỏ qua các ngày nghỉ lễ
+khai báo trong mảng `holidays`. Chương trình bỏ qua các
 entry đã tồn tại để tránh tạo trùng.
 
 ## Yêu cầu
@@ -51,6 +52,26 @@ Lần chạy đầu tiên, chương trình sẽ tự tạo môi trường `.venv
 dependency trong `requirements.txt`. Sau đó Selenium sẽ mở trình duyệt,
 đăng nhập và điền timesheet theo cấu hình.
 
+## Giao diện cấu hình
+
+Mở như một app bằng một trong các cách:
+
+- Bấm đúp file **`Auto Fill Timesheet.bat`** trong thư mục project.
+- Hoặc chạy `python config_ui.py`.
+- Tạo shortcut ngoài Desktop: chuột phải `Auto Fill Timesheet.bat` →
+  *Send to* → *Desktop (create shortcut)*.
+
+Cửa sổ cấu hình cho phép sửa toàn bộ `account.json`, nhập ngày nghỉ lễ
+(mỗi dòng một ngày) và chọn **Project / Activity** từ danh sách thả xuống:
+
+1. Bấm **Tải danh sách project/activity từ hệ thống**: chương trình đăng
+   nhập, đọc tất cả project và activity tương ứng của từng project, lưu vào
+   `options.json`.
+2. Chọn project, danh sách activity sẽ đổi theo project đó.
+3. Bấm **Lưu** hoặc **Lưu & chạy**.
+
+Có thể lấy danh sách bằng dòng lệnh: `python main.py --fetch-options`.
+
 ## Cấu hình
 
 | Trường | Mô tả |
@@ -63,9 +84,23 @@ dependency trong `requirements.txt`. Sau đó Selenium sẽ mở trình duyệt,
 | `start_day`, `end_day` | Khoảng ngày, định dạng `DD.MM.YYYY` |
 | `start_time_morning`, `end_time_morning` | Giờ bắt đầu/kết thúc buổi sáng |
 | `start_time_afternoon`, `end_time_afternoon` | Giờ bắt đầu/kết thúc buổi chiều |
+| `project` | (Tùy chọn) Tên project đúng như hiển thị trên hệ thống. Để trống = chọn project đầu tiên như trước |
+| `activity` | (Tùy chọn) Tên activity của project đó. Để trống = chọn activity mặc định như trước |
+| `holidays` | (Tùy chọn) Mảng các ngày nghỉ lễ sẽ không điền, định dạng `DD.MM.YYYY`, ví dụ `["01.01.2026", "02.09.2026"]` |
 
 ## Lưu ý
 
 - Kiểm tra kỹ ngày và giờ trước khi chạy.
 - Không sử dụng chương trình nếu không có quyền truy cập hệ thống.
 - Nên kiểm tra lại dữ liệu trên hệ thống sau khi chương trình hoàn tất.
+
+## Đóng gói thành app (không cần cài Python)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build.ps1
+```
+
+Kết quả là `release\AutoFillTimesheet.zip`. Người dùng chỉ cần giải nén và
+bấm đúp `AutoFillTimesheet.exe`. Gói chỉ chứa `account.json` mẫu (lấy từ
+`account.example.json`), không chứa thông tin đăng nhập cá nhân. Hướng dẫn
+cho người dùng nằm trong `HUONG_DAN.txt`.

@@ -1,0 +1,18 @@
+AUTO FILL TIMESHEET - HUONG DAN SU DUNG
+=======================================
+
+1. Giai nen file AutoFillTimesheet.zip ra mot thu muc bat ky.
+2. Bam dup AutoFillTimesheet.exe de mo app
+   (co the chuot phai > Send to > Desktop (create shortcut) de tao shortcut).
+3. Nhap ten dang nhap, mat khau, khoang ngay, gio lam, ngay nghi le
+   (moi dong 1 ngay, dinh dang DD.MM.YYYY).
+4. Bam "Tai danh sach project/activity tu he thong" (lan dau),
+   sau do chon Project va Activity can dien.
+5. Bam "Luu & chay". App se mo trinh duyet Chrome/Edge va tu dong dien.
+
+Yeu cau: may da cai Google Chrome hoac Microsoft Edge, co ket noi mang.
+Lan chay dau tien co the cham hon vi Selenium tu tai driver cho trinh duyet.
+
+Bao mat: thong tin dang nhap luu trong account.json canh file .exe.
+Khong gui thu muc nay cho nguoi khac sau khi da nhap mat khau.
+Neu Windows SmartScreen canh bao, bam "More info" > "Run anyway".
